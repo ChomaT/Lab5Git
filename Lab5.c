@@ -21,39 +21,66 @@ int maximum(int numdata, int* array);
 
 
 int main(int argc, char** argv) {
-	int numfile = 0, numdata, maxdata, i, array[50], max;
-	char str[15], outstr[25];
+	int numfile = 0, numdata, maxdata, i, array[500], max, j;
+	char str[25], outstr[25], thrdstr[25];
 	double factor, avg;
 	FILE *fp;
 
 
 	printf("\nSTART\n");
+        printf("ARGC == %d", argc);
+
 	//OPENING FILE
 	for(i = 0; i < argc; i++)
 	{
 		if(argv[i][1] == 'n')
 		{
 			//File opening
-			numfile = argv[i+1][0];
-				if(numfile > 9)
-					sprintf(str, "Raw_data_%d.txt", numfile);
+                        printf("\nBEGIN FILE OPENING");
+                        fflush(stdout);
+                        numfile = atoi(argv[i+1]);
+                            printf("\n numfile is %d", numfile);
+                            fflush(stdout);
+                                if(numfile > 9)
+                                {
+                                    printf("\nFILE > 10");
+                                    fflush(stdout);
+                                    sprintf(str, "Raw_data_%d.txt", numfile);
+                                }
 				else
-					sprintf(str, "Raw_data_0%d.txt", numfile);
+                                {
+                                    printf("\nFILE < 10");
+                                    fflush(stdout);
+                                    sprintf(str, "Raw_data_0%d.txt", numfile);
+                                }
+                        printf("\nFILE NAME: %s", str);
+                        fflush(stdout);
 			fp = fopen(str, "r");
 			if(fp == NULL)
 			{
 				perror("\n!!!Error opening file!!!\n");
+                                return 0;
 			}
+                        else
+                        {
+                                printf("\nFile opened successfully\n");
+                        }
 
-			printf("\nFile opened successfully\n");
-
-			//data parsing
+                        //data parsing
+                        printf("\nBEGIN DATA PARSING");
+                        fflush(stdout);
 			fscanf(fp, "%d", &numdata);
-			fscanf(fp, "%d", &maxdata);
-			for(i = 0; i < numdata; i++)
+                        printf("\nnumdata = %d", numdata);
+			fflush(stdout);
+                        fscanf(fp, "%d", &maxdata);
+                        printf("\nmaxdata = %d", maxdata);
+			fflush(stdout);
+                        for(i = 0; i < numdata; i++)
 			{
 				fscanf(fp, "%d", &array[i]);
 			}
+                        printf("\nCLOSE POINTER\n");
+                        fflush(stdout);
 			fclose(fp);
 		}
 	}
@@ -61,33 +88,35 @@ int main(int argc, char** argv) {
 
 
 	//OFFSET CASE
-	for(i = 1; i < argc; i++)
+	for(i = 0; i < argc; i++)
 	{
-		if(argv[i] == "-o")
+		if(argv[i][1] == 'o')
 		{
-		factor = (double)argv[i+1][0];
-		offset(numdata, array, factor, numfile);
+                    printf("\nOFFSET CASE");
+                    fflush(stdout);
+                    factor = (double)atoi(argv[i+1]);
+                    offset(numdata, array, factor, numfile);
 		}
 	}
 
 
 
 	//SCALE CASE
-	for(i = 1; i < argc; i++)
+	for(i = 0; i < argc; i++)
 	{
-		if(argv[i] == "-s")
+		if(argv[i][1] == 's')
 		{
-		factor = (double)argv[i+1][0];
-		scale(numdata, array, factor, numfile);
+			factor = (double)atoi(argv[i+1]);
+			scale(numdata, array, factor, numfile);
 		}
 	}
 
 
 
 	//STATS CASE
-	for(i = 1; i < argc; i++)
+	for(i = 0; i < argc; i++)
 	{
-		if(argv[i] == "-S")
+		if(argv[i][1] == 'S')
 		{
 		//Gather Statistics
 		avg = average(numdata, array);
@@ -111,9 +140,9 @@ int main(int argc, char** argv) {
 
 
 	//CENTERING CASE
-	for(i = 1; i < argc; i++)
+	for(i = 0; i < argc; i++)
 	{
-		if(argv[i] == "-C")
+		if(argv[i][1] == 'C')
 		{
 			center(numdata, array, avg, numfile);
 		}
@@ -121,14 +150,64 @@ int main(int argc, char** argv) {
 
 
 	//NORMALIZING CASE
-	for(i = 1; i < argc; i++)
+	for(i = 0; i < argc; i++)
 	{
-		if(argv[i] == "-N")
+		if(argv[i][1] == 'N')
 		{
 			normal(numdata, array, max, numfile);
 		}
 	}
 
+
+        //RENAMING CASE
+	for(i = 0; i < argc; i++)
+	{
+		if(argv[i][1] == 'r')
+		{
+			sprintf(thrdstr, "%s_data.txt", argv[i+1]);
+			fp = fopen(thrdstr, "w");
+			if(fp == NULL)
+			{
+				perror("\n!!!Error opening writing file!!!\n");
+			}
+			else
+			{
+				printf("\nSuccessfully opened Renaming file");
+				fflush(stdout);
+				fprintf(fp, "%d %d\n", numdata, maxdata);
+				for(j = 0; j < numdata; j++)
+				{
+					fprintf(fp, "%d\n", array[j]);
+				}
+			}
+			fclose(fp);
+
+			sprintf(outstr, "Offset_data_%d.txt", numfile);
+			sprintf(thrdstr, "%s_Offset.txt", argv[i+1]);
+			rename(outstr, thrdstr);
+			sprintf(outstr, "Scaled_data_%d.txt", numfile);
+			sprintf(thrdstr, "%s_Scaled.txt", argv[i+1]);
+			rename(outstr, thrdstr);
+			sprintf(outstr, "Centered_data_%d.txt", numfile);
+			sprintf(thrdstr, "%s_Centered.txt", argv[i+1]);
+			rename(outstr, thrdstr);
+			sprintf(outstr, "Normalized_data_%d.txt", numfile);
+			sprintf(thrdstr, "%s_Normalized.txt", argv[i+1]);
+			rename(outstr, thrdstr);
+			sprintf(outstr, "Statistics_data_%d.txt", numfile);
+			sprintf(thrdstr, "%s_Statistics.txt", argv[i+1]);
+			rename(outstr, thrdstr);
+		}
+	}
+
+        //help case
+        for(i = 0; i < argc; i++)
+        {
+            if(argv[i][1] == 'h')
+            {
+                printf("\nCommands are as follows:\n----------\n-n (number) --- opens file n\n-o (number) --- offsets data by input value\n-s (number) --- scales data by input value\n-S --- gets statistics\n-N --- normalizes data\n-C --- centers data\n-r (name) --- rename file\n-h --- help\n\n");
+            }
+        }
 	return EXIT_SUCCESS;
 }
 
@@ -194,6 +273,8 @@ void offset(int numdata, int *array, double factor, int numfile)
 	}
 	else
 	{
+		printf("\nSuccessfully opened writing file");
+		fflush(stdout);
 		fprintf(fp, "%d %lf\n", numdata, factor);
 		for(i = 0; i < numdata; i++)
 		{
@@ -277,7 +358,7 @@ void center(int numdata, int *array, double avg, int numfile)
 
 void normal(int numdata, int *array, int max, int numfile)
 {
-	double outarray[50];
+	double outarray[500];
 	int i;
 	char outstr[50];
 	FILE *fp;
